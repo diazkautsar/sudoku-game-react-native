@@ -4,7 +4,8 @@ import {
     StyleSheet,
     TextInput,
     Button,
-    Alert
+    Alert,
+    Text
 } from 'react-native';
 import Axios from 'axios';
 
@@ -19,6 +20,8 @@ export default function Board() {
         Axios.get('https://sugoku.herokuapp.com/board?difficulty=easy')
             .then(({ data }) => {
                 setBoard(data.board)
+                console.log(board);
+                
             })
             .catch(err => {
                 console.log(err)
@@ -31,10 +34,11 @@ export default function Board() {
     const handleOnChangeText = (value, row, col) => {
         board[row][col] = +value
         setBoard(board)
+        console.log(board, "INI DARI HANDLE")
     }
 
-    const encodeBoard = (board) => board.reduce((result, row, i) => 
-    result + `%5B${encodeURIComponent(row)}%5D${i === board.length - 1 ? '' : '%2C'}`, '')
+    const encodeBoard = (board) => board.reduce((result, row, i) =>
+        result + `%5B${encodeURIComponent(row)}%5D${i === board.length - 1 ? '' : '%2C'}`, '')
 
     const encodeParams = (params) =>
         Object.keys(params)
@@ -44,40 +48,61 @@ export default function Board() {
     const checkAnswer = () => {
         console.log('Button ke triger')
         const data = { board }
-        Axios({
-            method: 'post',
-            url: 'https://sugoku.herokuapp.com/validate',
-            body: encodeParams(data),
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        Axios.post('https://sugoku.herokuapp.com/validate', encodeParams({ board }))
+        .then(response => {
+            console.log(response)
+            if (response.data.status !== 'solved') {
+                          Alert.alert('HMMMMM', 'belajar lagi sono')
+                        }
         })
-            .then(response => {
-                console.log(response.data.status)
-                if (response.data.status === 'unsolved') {
-                    Alert.alert('HMMMMM', 'belajar lagi sono')
-                }
-            })
-            .catch(err => {
-                console.log(err)
-            })
+        .catch(err => console.log(err))
+        // Axios({
+        //     method: 'post',
+        //     url: 'https://sugoku.herokuapp.com/solve',
+        //     body: encodeParams(data),
+        //     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        // })
+        //     .then(response => {
+        //         console.log(response)
+        //         // if (response.data.status === 'unsolved') {
+        //         //     Alert.alert('HMMMMM', 'belajar lagi sono')
+        //         // }
+        //     })
+        //     .catch(err => {
+        //         console.log(err)
+        //     })
     }
 
     if (loading || board.length < 1) return <Loading />
 
+    const getInput = (num, i, j) => {
+        if (num) {
+            return (
+                <Text style={styles.box}>
+                    {num}
+                </Text>
+            )
+        } else {
+            return (
+                <TextInput
+                    key={j}
+                    keyboardType="number-pad"
+                    style={styles.box}
+                    maxLength={1}
+                    onChangeText={text => handleOnChangeText(text, i, j)}
+                />
+            )
+        }
+    }
+
     return (
         <View>
-            <View style={styles.outerBox}>
+            <View style={styles.outerBox2}>
                 {board.map((item, i) => (
-                    <View key={i}>
+                    <View key={i} style={styles.outerBox}>
                         {item.map((num, j) => (
-                            <View>
-                                <TextInput
-                                    key={j}
-                                    keyboardType="number-pad"
-                                    style={styles.box}
-                                    defaultValue={num ? num.toString() : ''}
-                                    maxLength={1}
-                                    onChangeText={text => handleOnChangeText(text, i, j)}
-                                />
+                            <View >
+                                {getInput(num, i, j)}
                             </View>
                         ))}
                     </View>
@@ -88,6 +113,9 @@ export default function Board() {
                     title="SUBMIT ANSWER"
                     onPress={() => checkAnswer()}
                 />
+                {/* <Text>
+                    {JSON.stringify(board)}
+                </Text> */}
             </View>
         </View>
     )
@@ -96,9 +124,15 @@ export default function Board() {
 const styles = StyleSheet.create({
     outerBox: {
         borderColor: "white",
+        // height: 360,
+        // width: 360,
+        flexDirection: 'row',
+    },
+    outerBox2: {
+        borderColor: "white",
         height: 360,
         width: 360,
-        flexDirection: 'row',
+        // flexDirection: 'row',
     },
     box: {
         borderWidth: 2,
