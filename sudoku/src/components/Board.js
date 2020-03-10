@@ -11,17 +11,19 @@ import Axios from 'axios';
 
 import Loading from './Loading'
 
-export default function Board() {
+export default function Board({ route }) {
     const [board, setBoard] = useState('')
     const [loading, setLoading] = useState(false)
+    const [backUpBoard, setBackUpBoard] = useState('')
+    const { playerName } = route.params;
 
     useEffect(() => {
         setLoading(true)
         Axios.get('https://sugoku.herokuapp.com/board?difficulty=easy')
             .then(({ data }) => {
                 setBoard(data.board)
-                console.log(board);
-                
+                setBackUpBoard(data.board)
+
             })
             .catch(err => {
                 console.log(err)
@@ -34,7 +36,6 @@ export default function Board() {
     const handleOnChangeText = (value, row, col) => {
         board[row][col] = +value
         setBoard(board)
-        console.log(board, "INI DARI HANDLE")
     }
 
     const encodeBoard = (board) => board.reduce((result, row, i) =>
@@ -46,31 +47,30 @@ export default function Board() {
             .join('&');
 
     const checkAnswer = () => {
-        console.log('Button ke triger')
-        const data = { board }
+        console.log(board);
+        
         Axios.post('https://sugoku.herokuapp.com/validate', encodeParams({ board }))
-        .then(response => {
-            console.log(response)
-            if (response.data.status !== 'solved') {
-                          Alert.alert('HMMMMM', 'belajar lagi sono')
-                        }
-        })
-        .catch(err => console.log(err))
-        // Axios({
-        //     method: 'post',
-        //     url: 'https://sugoku.herokuapp.com/solve',
-        //     body: encodeParams(data),
-        //     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        // })
-        //     .then(response => {
-        //         console.log(response)
-        //         // if (response.data.status === 'unsolved') {
-        //         //     Alert.alert('HMMMMM', 'belajar lagi sono')
-        //         // }
-        //     })
-        //     .catch(err => {
-        //         console.log(err)
-        //     })
+            .then(response => {
+                if (response.data.status !== 'solved') {
+                    Alert.alert('HMMMMM', 'belajar lagi sono')
+                } else {
+                    Alert.alert('HOREEE', "kamu hebaattt")
+                }
+            })
+            .catch(err => console.log(err))
+    }
+
+    const solveSudoku = () => {
+        Axios.post('https://sugoku.herokuapp.com/solve', encodeParams({ board }))
+            .then(({ data }) => {
+                console.log(data)
+                setBoard(data.solution)
+            })
+            .catch(err => console.log(err))
+    }
+
+    const clearSudoku = () => {
+        setBoard(backUpBoard)
     }
 
     if (loading || board.length < 1) return <Loading />
@@ -85,7 +85,6 @@ export default function Board() {
         } else {
             return (
                 <TextInput
-                    key={j}
                     keyboardType="number-pad"
                     style={styles.box}
                     maxLength={1}
@@ -96,7 +95,12 @@ export default function Board() {
     }
 
     return (
-        <View>
+        <View style={{ justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+            <View>
+                <Text>
+                    Selamat Datang Pak {playerName}
+                </Text>
+            </View>
             <View style={styles.outerBox2}>
                 {board.map((item, i) => (
                     <View key={i} style={styles.outerBox}>
@@ -108,14 +112,23 @@ export default function Board() {
                     </View>
                 ))}
             </View>
-            <View>
+            <View style={{ marginTop: 10 }}>
                 <Button
                     title="SUBMIT ANSWER"
                     onPress={() => checkAnswer()}
                 />
-                {/* <Text>
-                    {JSON.stringify(board)}
-                </Text> */}
+            </View>
+            <View style={{ marginTop: 10 }}>
+                <Button
+                    title="SOLVE SUDOKU"
+                    onPress={() => solveSudoku()}
+                />
+            </View>
+            <View style={{ marginTop: 10 }}>
+                <Button
+                    title="CLEAR"
+                    onPress={() => clearSudoku()}
+                />
             </View>
         </View>
     )
@@ -124,21 +137,16 @@ export default function Board() {
 const styles = StyleSheet.create({
     outerBox: {
         borderColor: "white",
-        // height: 360,
-        // width: 360,
         flexDirection: 'row',
     },
     outerBox2: {
         borderColor: "white",
-        height: 360,
-        width: 360,
-        // flexDirection: 'row',
     },
     box: {
         borderWidth: 2,
         borderColor: "black",
-        height: 40,
-        width: 40,
+        height: 35,
+        width: 35,
         textAlign: 'center',
         textAlignVertical: "center"
     }
