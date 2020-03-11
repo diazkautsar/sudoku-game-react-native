@@ -1,8 +1,18 @@
-import { SET_BOARD, SET_LOADING, SET_SELECTED_COLUMN } from '../actionType'
+import { 
+    SET_BOARD, 
+    SET_LOADING, 
+    SET_SELECTED_COLUMN, 
+    SET_LEADER_BOARD, 
+    CHECK_BOARD, 
+    SET_STATUS 
+} from '../actionType'
 
 const initialState = {
     loading: false,
-    board: []
+    board: [],
+    leaderBoard: [],
+    checkBoard: [],
+    statusGame: false
 }
 
 export function boardReducer (state = initialState, action) {
@@ -20,10 +30,28 @@ export function boardReducer (state = initialState, action) {
         }));
         return { ...state, board: newBoard  }
     }
+
+    if (action.type === SET_LEADER_BOARD) {
+        let newLeaderBoard = state.leaderBoard.concat(action.payload)
+        return { ... state, leaderBoard: newLeaderBoard}
+    }
     
     if (action.type === SET_BOARD) {
-        console.log(action.payload, 'INI DARI REDUCER')
         return {...state, board: action.payload}
     }
+
+    if (action.type === CHECK_BOARD) {
+        const newBoard = action.payload.map((item, i) => 
+        item.map((res, j) => {
+            if (res) return true
+            else return false
+        }))
+        return {...state, checkBoard: newBoard}
+    }
+
+    if (action.type === SET_STATUS) {
+        return { ...state, statusGame: action.payload }
+    }
+
     return state
 }
