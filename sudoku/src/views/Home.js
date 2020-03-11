@@ -1,39 +1,42 @@
 import React, { useState } from 'react';
-import { 
-    View, 
-    Text, 
-    StyleSheet, 
+import {
+    View,
+    Text,
+    StyleSheet,
     Button,
-    TextInput
+    TextInput,
+     KeyboardAvoidingView
 } from 'react-native';
 
 export default function Home({ navigation }) {
     const [name, setName] = useState('')
 
+    const goToBoard = () => {
+        navigation.navigate('Board', {playerName: name})
+    }
+
     return (
-        <View style={styles.container}>
+        <KeyboardAvoidingView behavior='padding' style={styles.container}>
             <Text>Your Name:</Text>
-            <TextInput 
-            style={{ 
-                borderWidth: 2, 
-                width: 300,
-                borderRadius: 5,    
-            }}
-            onChangeText={(text) => setName(text)}
+            <TextInput
+                style={{
+                    borderWidth: 2,
+                    width: 300,
+                    borderRadius: 5,
+                }}
+                onChangeText={(text) => setName(text)}
             />
             <View
-            style={{
-                marginTop: 4
-            }}
+                style={{
+                    marginTop: 4
+                }}
             >
-                <Button 
-                title="LETS PLAY BRO"
-                onPress={() => navigation.navigate('Board', {
-                    playerName: name
-                })}
+                <Button
+                    title="LETS PLAY BRO"
+                    onPress={() => goToBoard()}
                 />
             </View>
-        </View>
+        </KeyboardAvoidingView>
     )
 }
 

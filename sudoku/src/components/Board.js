@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
     View,
     StyleSheet,
@@ -10,32 +10,24 @@ import {
 import Axios from 'axios';
 
 import Loading from './Loading'
+import { useSelector, useDispatch } from 'react-redux';
+import { getBoard, setBoard, setSelectedColumn } from '../store/actionCreator';
 
-export default function Board({ route }) {
-    const [board, setBoard] = useState('')
-    const [loading, setLoading] = useState(false)
-    const [backUpBoard, setBackUpBoard] = useState('')
+export default function Board({ route, navigation }) {
+    const loading = useSelector(state => state.boardReducer.loading)
+    const board = useSelector(state => state.boardReducer.board)
+    const backUpBoard = useSelector(state => state.backUpBoardReducer.backUpBoard)
     const { playerName } = route.params;
+    const dispatch = useDispatch()
 
     useEffect(() => {
-        setLoading(true)
-        Axios.get('https://sugoku.herokuapp.com/board?difficulty=easy')
-            .then(({ data }) => {
-                setBoard(data.board)
-                setBackUpBoard(data.board)
-
-            })
-            .catch(err => {
-                console.log(err)
-            })
-            .finally(() => {
-                setLoading(false)
-            })
+        dispatch(getBoard())
     }, [])
 
     const handleOnChangeText = (value, row, col) => {
-        board[row][col] = +value
-        setBoard(board)
+        dispatch(setSelectedColumn(+value, row, col))
+        console.log(board, 'ini board')
+        console.log(backUpBoard, 'ini backup board')
     }
 
     const encodeBoard = (board) => board.reduce((result, row, i) =>
@@ -47,33 +39,32 @@ export default function Board({ route }) {
             .join('&');
 
     const checkAnswer = () => {
-        console.log(board);
-        
         Axios.post('https://sugoku.herokuapp.com/validate', encodeParams({ board }))
             .then(response => {
                 if (response.data.status !== 'solved') {
                     Alert.alert('HMMMMM', 'belajar lagi sono')
                 } else {
-                    Alert.alert('HOREEE', "kamu hebaattt")
+                    navigation.navigate('Result')
                 }
             })
             .catch(err => console.log(err))
     }
 
     const solveSudoku = () => {
-        Axios.post('https://sugoku.herokuapp.com/solve', encodeParams({ board }))
+        console.log('ke trigger dongs')
+        Axios.post('https://sugoku.herokuapp.com/solve', encodeParams({ board: backUpBoard }))
             .then(({ data }) => {
-                console.log(data)
-                setBoard(data.solution)
+                dispatch(setBoard(data.solution))
             })
             .catch(err => console.log(err))
     }
 
     const clearSudoku = () => {
-        setBoard(backUpBoard)
+        console.log('clear ke trigger')
+        dispatch(setBoard(backUpBoard))
     }
 
-    if (loading || board.length < 1) return <Loading />
+    if (loading || !board.length) return <Loading />
 
     const getInput = (num, i, j) => {
         if (num) {
@@ -98,7 +89,8 @@ export default function Board({ route }) {
         <View style={{ justifyContent: 'center', alignItems: 'center', flex: 1 }}>
             <View>
                 <Text>
-                    Selamat Datang Pak {playerName}
+                    {/* Selamat Datang Pak/Bu {playerName} */}
+                    {JSON.stringify(board)}
                 </Text>
             </View>
             <View style={styles.outerBox2}>
@@ -112,23 +104,25 @@ export default function Board({ route }) {
                     </View>
                 ))}
             </View>
-            <View style={{ marginTop: 10 }}>
-                <Button
-                    title="SUBMIT ANSWER"
-                    onPress={() => checkAnswer()}
-                />
-            </View>
-            <View style={{ marginTop: 10 }}>
-                <Button
-                    title="SOLVE SUDOKU"
-                    onPress={() => solveSudoku()}
-                />
-            </View>
-            <View style={{ marginTop: 10 }}>
-                <Button
-                    title="CLEAR"
-                    onPress={() => clearSudoku()}
-                />
+            <View>
+                <View style={{ marginTop: 10 }}>
+                    <Button
+                        title="SUBMIT ANSWER"
+                        onPress={() => checkAnswer()}
+                    />
+                </View>
+                <View style={{ marginTop: 10 }}>
+                    <Button
+                        title="SOLVE SUDOKU"
+                        onPress={() => solveSudoku()}
+                    />
+                </View>
+                <View style={{ marginTop: 10 }}>
+                    <Button
+                        title="CLEAR"
+                        onPress={() => clearSudoku()}
+                    />
+                </View>
             </View>
         </View>
     )

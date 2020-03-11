@@ -1,0 +1,5 @@
+export const SET_SELECTED_COLUMN = 'SET_SELECTED_COLUMN'
+export const SET_BOARD = 'SET_BOARD'
+export const SET_BACKUPBOARD = 'SET_BACKUPBOARD'
+export const SET_LOADING = 'SET_LOADING'
+export const UPDATE_BOARD = 'UPDATE_BOARD'
